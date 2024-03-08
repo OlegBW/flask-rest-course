@@ -1,14 +1,12 @@
 from db import db
 
-class ItemModel(db.Model):
-    __tablename__ = "items"
-
+class TagModel(db.Model):
+    __tablename__ = "tags"
+    
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-    description = db.Column(db.String)
-    price = db.Column(db.Float(precision=2), nullable=False, unique=False)
+    name = db.Column(db.String(50), unique=False, nullable=False)
     store_id = db.Column(db.Integer, db.ForeignKey("stores.id"), nullable=False, unique=False)
 
-    store = db.relationship("StoreModel", back_populates="items")
+    store = db.relationship("StoreModel", back_populates="tags", cascade="all, delete")
     # Використовую secondary щоб вказати проміжну таблицю, визначені в ній зовнішні ключі визначають логіку з'єднання сутностей
-    tags = db.relationship("TagModel", back_populates="items", secondary="items_tags")
+    items = db.relationship("ItemModel", back_populates="tags", secondary="items_tags")
