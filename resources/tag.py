@@ -7,6 +7,7 @@ from schemas import TagSchema, TagAndItemSchema
 
 blp = Blueprint("tags", __name__, description="Operations on tags")
 
+
 @blp.route("/store/<int:store_id>/tag")
 class TagsInStore(MethodView):
     @blp.response(200, TagSchema(many=True))
@@ -27,22 +28,20 @@ class TagsInStore(MethodView):
 
         return new_tag
 
+
 @blp.route("/tag/<int:tag_id>")
 class Tag(MethodView):
     @blp.response(200, TagSchema)
     def get(self, tag_id):
         tag = TagModel.query.get_or_404(tag_id)
         return tag
-    
+
     @blp.response(
-        202, 
+        202,
         description="Delete a tag if no item is tagged with it",
-        example={"msg":"Tag deleted"}
-        )
-    @blp.alt_response(
-        404,
-        description="Tag not found"
+        example={"msg": "Tag deleted"},
     )
+    @blp.alt_response(404, description="Tag not found")
     @blp.alt_response(
         400,
         description="Returned it the tag is assigned to one or more items, in this case tag is not deleted",

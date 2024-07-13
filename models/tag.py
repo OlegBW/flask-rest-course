@@ -1,11 +1,14 @@
 from db import db
 
+
 class TagModel(db.Model):
     __tablename__ = "tags"
-    
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=False, nullable=False)
-    store_id = db.Column(db.Integer, db.ForeignKey("stores.id"), nullable=False, unique=False)
+    store_id = db.Column(
+        db.Integer, db.ForeignKey("stores.id"), nullable=False, unique=False
+    )
 
     store = db.relationship("StoreModel", back_populates="tags", cascade="all, delete")
     # Використовую secondary щоб вказати проміжну таблицю, визначені в ній зовнішні ключі визначають логіку з'єднання сутностей

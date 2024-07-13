@@ -15,9 +15,16 @@ from resources.store import blp as StoreBlueprint
 from resources.tag import blp as TagBlueprint
 from resources.user import blp as UserBlueprint
 
+import redis
+from rq import Queue
+
+
 def create_app(db_url=None):
     app = Flask(__name__)
     load_dotenv()
+
+    connection = redis.from_url(os.getenv("REDIS_URL"))
+    app.queue = Queue("emails", connection=connection)
 
     app.config["PROPAGATE_EXCEPTIONS"] = True
     app.config["API_TITLE"] = "Stores REST API"
@@ -25,8 +32,12 @@ def create_app(db_url=None):
     app.config["OPENAPI_VERSION"] = "3.0.3"
     app.config["OPENAPI_URL_PREFIX"] = "/"
     app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
-    app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url or os.getenv("DATABASE_URL", "sqlite:///data.db")
+    app.config["OPENAPI_SWAGGER_UI_URL"] = (
+        "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+    )
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url or os.getenv(
+        "DATABASE_URL", "sqlite:///data.db"
+    )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
@@ -44,16 +55,14 @@ def create_app(db_url=None):
     def check_if_token_in_blocklist(jwt_header, jwt_payload):
         # Якщо повертає True то викликає revoked_token_callback
         return jwt_payload["jti"] in BLOCKLIST
-    
+
     @jwt.revoked_token_loader
     def revoked_token_callback(jwt_header, jwt_payload):
         return (
             jsonify(
-                {
-                    "message": "The token has been revoked",
-                    "error": "token_revoked"
-                }),
-            401
+                {"message": "The token has been revoked", "error": "token_revoked"}
+            ),
+            401,
         )
 
     # Додавання до токену додаткової інформації
@@ -67,15 +76,19 @@ def create_app(db_url=None):
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
         return (
-            jsonify({"message": "Signature verification failed", "error":"invalid_token"}),
-            401
+            jsonify(
+                {"message": "Signature verification failed", "error": "invalid_token"}
+            ),
+            401,
         )
-    
+
     @jwt.needs_fresh_token_loader
     def token_not_fresh_callback(jwt_header, jwt_payload):
         return (
-            jsonify({"message": "The token is not fresh", "error":"fresh_token_required"}),
-            401
+            jsonify(
+                {"message": "The token is not fresh", "error": "fresh_token_required"}
+            ),
+            401,
         )
 
     api.register_blueprint(ItemBlueprint)

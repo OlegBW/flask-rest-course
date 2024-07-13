@@ -9,6 +9,7 @@ from schemas import ItemSchema, ItemUpdateSchema
 
 blp = Blueprint("items", __name__, description="Operations on items")
 
+
 @blp.route("/item/<int:item_id>")
 class Item(MethodView):
     @blp.response(200, ItemSchema)
@@ -25,8 +26,7 @@ class Item(MethodView):
         item = ItemModel.query.get_or_404(item_id)
         db.session.delete(item)
         db.session.commit()
-        return {"msg":"Item deleted"}
-
+        return {"msg": "Item deleted"}
 
     @blp.arguments(ItemUpdateSchema)
     @blp.response(200, ItemSchema)
@@ -35,7 +35,7 @@ class Item(MethodView):
         if item:
             item.name = item_data["name"]
             item.price = item_data["price"]
-        
+
         else:
             item = ItemModel(**item_data, id=item_id)
 
@@ -43,6 +43,7 @@ class Item(MethodView):
         db.session.commit()
 
         return item
+
 
 @blp.route("/item")
 class ItemList(MethodView):
